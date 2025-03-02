@@ -1,72 +1,121 @@
-import React from "react";
+// src/HomePage.js
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import heroImage from "../assets/heroImage.jpg";
+import { FiChevronDown } from "react-icons/fi";
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.2 } },
-};
+const heroText = "IT'S TIME TO BUILD YOUR ECONOMY GROW";
 
-const fadeUpVariant = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
-};
+function HomePage() {
+  const [displayedText, setDisplayedText] = useState("");
 
-function Home() {
+  // Typewriter effect for the headline
+  useEffect(() => {
+    let index = 0;
+    const interval = setInterval(() => {
+      setDisplayedText(heroText.slice(0, index + 1));
+      index++;
+      if (index === heroText.length) {
+        clearInterval(interval);
+      }
+    }, 100); // Adjust speed as needed
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="relative">
-      {/* Optional floating shape (you can remove if not needed) */}
+    <div className="min-h-screen bg-gradient-to-br from-[#020B2D] to-[#010821] relative overflow-hidden">
+      {/* Animated Decorative Circles */}
       <motion.div
-        className="absolute top-0 right-0 w-32 opacity-20"
-        animate={{ y: [0, -20, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <img src="../assets/floatingShape.png" alt="Floating" />
-      </motion.div>
-      <section className="bg-gradient-to-b from-white to-gray-50 py-16 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
+        className="absolute top-[-50px] left-[-50px] w-56 h-56 rounded-full bg-yellow-500 opacity-20"
+        animate={{ x: [0, 50, 0], y: [0, 50, 0] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute bottom-[-50px] right-[-50px] w-72 h-72 rounded-full bg-green-500 opacity-20"
+        animate={{ x: [0, -50, 0], y: [0, -50, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-24 flex flex-col md:flex-row items-center">
+        {/* Hero Text */}
+        <div className="flex-1 space-y-6">
           <motion.div
-            className="md:w-1/2 space-y-6 mb-10 md:mb-0"
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
+            className="text-yellow-500 font-medium text-xl"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
           >
-            <motion.h1
-              className="text-4xl md:text-5xl font-bold text-yellow-600"
-              variants={fadeUpVariant}
-            >
-              WELFARE INFRA PROJECTS
-            </motion.h1>
-            <motion.h2
-              className="text-2xl md:text-3xl font-semibold text-yellow-600"
-              variants={fadeUpVariant}
-            >
-              IT’S TIME TO BUILD YOUR ECONOMY GROW
-            </motion.h2>
-            <motion.p className="text-lg text-gray-800 max-w-2xl" variants={fadeUpVariant}>
-              Make your work easier with an integrated ecosystem that lets all departments work properly together.
-            </motion.p>
-            <motion.button
-              variants={fadeUpVariant}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-md transition"
-            >
-              Get Started
-            </motion.button>
+            WELFARE INFRA PROJECTS
           </motion.div>
-          <motion.div
-            className="md:w-1/2 flex justify-center md:justify-end"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+          <motion.h1
+            className="text-4xl md:text-6xl font-bold text-white leading-tight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 1 }}
           >
-            <img src={heroImage} alt="Hero" className="w-full max-w-md rounded-xl shadow-xl" />
-          </motion.div>
+            {displayedText}
+          </motion.h1>
+          <motion.p
+            className="text-gray-300 text-lg max-w-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 1 }}
+          >
+            Make your work easier with an integrated ecosystem that lets all departments work together seamlessly.
+          </motion.p>
+          <motion.button
+            className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-6 text-lg rounded transition"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5, duration: 1 }}
+          >
+            Get Started
+          </motion.button>
         </div>
-      </section>
+
+        {/* Hero Image */}
+        <div className="flex-1 relative mt-12 md:mt-0">
+          <motion.img
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-DSBpxgx4Malr414qkwxbVhCqY5NeOc.png"
+            alt="Person working on laptop"
+            className="rounded-lg shadow-lg"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1, duration: 1 }}
+          />
+        </div>
+      </div>
+
+      {/* Scroll Down Indicator */}
+      <motion.div
+        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white"
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <FiChevronDown size={32} />
+      </motion.div>
+
+      {/* Additional About Section */}
+      <div className="container mx-auto px-4 py-24">
+        <motion.div
+          className="max-w-3xl mx-auto text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+        >
+          <h2 className="text-3xl font-bold text-white mb-4">
+            About WelfareInfraProjects
+          </h2>
+          <p className="text-gray-300 text-lg">
+            WelfareInfraProjects is a diversified enterprise operating in multiple sectors including construction, finance, technology, and more. We harness innovation and sustainable practices to drive growth and build a better future for our community.
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }
 
-export default Home;
+export default HomePage;
