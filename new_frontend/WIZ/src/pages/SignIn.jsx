@@ -54,7 +54,6 @@ function SignIn({ setIsAuthenticated }) {
           },
           body: JSON.stringify(formData),
         });
-
         if (!response.ok) {
           const errorMessage = await response.text();
           toast.error(errorMessage, {
@@ -63,10 +62,12 @@ function SignIn({ setIsAuthenticated }) {
           });
         } else {
           const data = await response.json();
+          console.log("Login successful:", data);  // Log the response data here
           localStorage.setItem("token", data.token);
-          localStorage.setItem("userID", data.id);
+          localStorage.setItem("userID", data.userId);
           localStorage.setItem("userEmail", data.email);
-          
+          localStorage.setItem("userRole", data.role);
+
           toast.success("Login Successful!", {
             position: "top-center",
             autoClose: 1000,

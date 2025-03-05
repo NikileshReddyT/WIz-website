@@ -79,13 +79,20 @@ function SignUp({ setIsAuthenticated }) {
           },
         };
 
+        // Update the URL if needed for your development environment.
         const response = await axios.post(
           "https://wiz-website-production.up.railway.app/api/auth/register",
           formData,
           config
         );
-        console.log("Backend response:", response.data);
-        localStorage.setItem("isAuthenticated", "true");
+        console.log("SignUp successful:", response.data); // Log full response data
+
+        // Assuming the response data contains token, userId, email, etc.
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("userID", response.data.userId);
+        localStorage.setItem("userEmail", response.data.email);
+        localStorage.setItem("userRole", response.data.role);
+
         toast.success("Sign Up Successful! Redirecting to your Dashboard...", {
           position: "top-center",
           autoClose: 2000,

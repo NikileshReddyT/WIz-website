@@ -8,7 +8,11 @@ import { MdGroupWork } from "react-icons/md";
 function Dashboard({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const userID = localStorage.getItem("userID") || "UnknownUser";
-
+  const userEmail = localStorage.getItem("userEmail") || "UnknownEmail";
+  const userRole = localStorage.getItem("userRole") || "UnknownRole";
+  console.log("User ID:", userID);
+  console.log("User Email:", userEmail);
+  console.log("User Role:", userRole);
   // State for referral link
   const [referralLink, setReferralLink] = useState("");
   const [showToast, setShowToast] = useState(false);

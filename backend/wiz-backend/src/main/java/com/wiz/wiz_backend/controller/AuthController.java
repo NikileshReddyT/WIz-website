@@ -22,7 +22,17 @@ public class AuthController {
         try {
             System.out.println(registerRequest.getEmail());
             User user = userService.registerUser(registerRequest);
-            return ResponseEntity.ok("User registered successfully with ID: " + user.getId());
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+            LoginResponse response = new LoginResponse(
+                    token, 
+                    user.getId(), 
+                    user.getName(), 
+                    user.getUsername(),
+                    user.getEmail(), 
+                    user.getPhone(),
+                    user.getRole()
+            ); 
+            return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
