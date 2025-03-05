@@ -7,9 +7,9 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* About Section */}
         <div>
-          <h4 className="text-2xl font-bold mb-4">About WelfareInfraProjects</h4>
+          <h4 className="text-2xl font-bold mb-4">About WIZ InfraProjects</h4>
           <p className="text-gray-400">
-            WelfareInfraProjects is a diversified enterprise committed to innovation, quality, and community welfare across multiple industries.
+            WIZ InfraProjects is a diversified enterprise committed to innovation, quality, and community welfare across multiple industries.
           </p>
         </div>
 
@@ -68,7 +68,7 @@ function Footer() {
       <div className="border-t border-gray-700 mt-12 pt-6">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
           <p className="text-gray-400 mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} WelfareInfraProjects. All rights reserved.
+            &copy; {new Date().getFullYear()} WIZ InfraProjects. All rights reserved.
           </p>
           <div className="flex space-x-4">
             <a

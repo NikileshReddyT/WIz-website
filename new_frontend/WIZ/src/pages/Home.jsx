@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
+import homei from "../assets/homei.jpg";
 
 const heroText = "IT'S TIME TO BUILD YOUR ECONOMY GROW";
 
@@ -45,7 +46,7 @@ function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
           >
-            WELFARE INFRA PROJECTS
+            WIZ INFRA PROJECTS
           </motion.div>
           <motion.h1
             className="text-4xl md:text-6xl font-bold text-white leading-tight"
@@ -77,15 +78,15 @@ function HomePage() {
 
         {/* Hero Image */}
         <div className="flex-1 relative mt-12 md:mt-0">
-          <motion.img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-DSBpxgx4Malr414qkwxbVhCqY5NeOc.png"
-            alt="Person working on laptop"
-            className="rounded-lg shadow-lg"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-          />
-        </div>
+  <motion.img
+    src={homei}
+    alt="Person working on laptop"
+    className="rounded-lg shadow-lg"
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: 1, duration: 1 }}
+  />
+</div>
       </div>
 
       {/* Scroll Down Indicator */}
@@ -107,10 +108,10 @@ function HomePage() {
           transition={{ duration: 1 }}
         >
           <h2 className="text-3xl font-bold text-white mb-4">
-            About WelfareInfraProjects
+            About WIZ InfraProjects
           </h2>
           <p className="text-gray-300 text-lg">
-            WelfareInfraProjects is a diversified enterprise operating in multiple sectors including construction, finance, technology, and more. We harness innovation and sustainable practices to drive growth and build a better future for our community.
+            WIZ InfraProjects is a diversified enterprise operating in multiple sectors including construction, finance, technology, and more. We harness innovation and sustainable practices to drive growth and build a better future for our community.
           </p>
         </motion.div>
       </div>

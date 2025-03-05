@@ -1,15 +1,15 @@
 // src/pages/Services.jsx
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import servicesHeroImg from "../assets/servicesHeroImg.jpg";
-import dottedLine from "../assets/dottedLine.png";
+import services from "../assets/services.jpg";
+import dt from "../assets/dt.png";
 
-import sandGraniteImg from "../assets/sandGranite.jpg";
-import evIndustryImg from "../assets/evIndustry.jpg";
-import goldTradingImg from "../assets/goldTrading.jpg";
-import stockMarketImg from "../assets/stockMarket.jpg";
-import agroFarmingImg from "../assets/agroFarming.jpg";
-import constructionImg from "../assets/construction.jpg";
+import sand from "../assets/sand.jpg";
+import ev from "../assets/ev.jpg";
+import gold from "../assets/gold.jpg";
+import stock from "../assets/stock.jpg";
+import agro from "../assets/agro.jpg";
+import plot from "../assets/plot.jpg";
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
@@ -31,7 +31,7 @@ function Services() {
       {/* Hero/Banner Section */}
       <section className="relative py-20">
         <img
-          src={servicesHeroImg}
+          src={services}
           alt="Services Hero"
           className="absolute inset-0 w-full h-full object-cover opacity-10"
         />
@@ -62,39 +62,39 @@ function Services() {
         initial="hidden"
         animate="visible"
       >
-        <img src={dottedLine} alt="Divider" className="h-6 w-auto opacity-70" />
+        <img src={dt} alt="Divider" className="h-6 w-auto opacity-70" />
       </motion.div>
 
       {/* Services Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-8">
         <FlipCard
           title="Sand and Granite Projects"
-          img={sandGraniteImg}
+          img={sand}
           text="Leader in supplying premium-grade sand and high-quality granite for construction and industrial applications. Our sustainable practices ensure a reliable supply for projects of all sizes."
         />
         <FlipCard
           title="Electric Vehicle (EV) Industry"
-          img={evIndustryImg}
+          img={ev}
           text="At the forefront of the EV revolution, we promote innovative and sustainable transportation solutions. Our services include infrastructure support, technology integration, and industry partnerships."
         />
         <FlipCard
           title="Gold Trading"
-          img={goldTradingImg}
+          img={gold}
           text="Providing secure and transparent trading solutions, our gold trading services offer competitive pricing and reliable market insights to investors."
         />
         <FlipCard
           title="Stock Market Investments (NSE/BSE)"
-          img={stockMarketImg}
+          img={stock}
           text="We leverage market expertise to navigate stock trading complexities, ensuring strategic investments and diversified portfolios."
         />
         <FlipCard
           title="Agro Farming"
-          img={agroFarmingImg}
+          img={agro}
           text="Focused on sustainable practices, our agro farming initiatives support food security and environmental stewardship by integrating innovative agricultural techniques."
         />
         <FlipCard
           title="Construction and Open Plots Selling"
-          img={constructionImg}
+          img={plot}
           text="Delivering comprehensive construction solutions and prime real estate opportunities, we focus on high-quality development and sustainable practices."
         />
       </div>

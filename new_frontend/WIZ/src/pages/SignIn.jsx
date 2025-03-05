@@ -1,4 +1,3 @@
-// src/pages/SignIn.jsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -48,8 +47,6 @@ function SignIn({ setIsAuthenticated }) {
 
     if (Object.keys(validationErrors).length === 0) {
       try {
-        console.log(formData)
-        console.log(JSON.stringify(formData))
         const response = await fetch("http://localhost:8080/api/auth/login", {
           method: "POST",
           headers: {
@@ -62,34 +59,33 @@ function SignIn({ setIsAuthenticated }) {
           const errorMessage = await response.text();
           toast.error(errorMessage, {
             position: "top-center",
-            autoClose: 2000,
+            autoClose: 500,
           });
         } else {
           const data = await response.json();
-          // Store token and user details in localStorage
           localStorage.setItem("token", data.token);
           localStorage.setItem("userID", data.id);
           localStorage.setItem("userEmail", data.email);
-          console.log(response)
+          
           toast.success("Login Successful!", {
             position: "top-center",
-            autoClose: 2000,
+            autoClose: 1000,
+            onClose: () => {
+              setIsAuthenticated(true);
+              navigate("/dashboard");
+            },
           });
-          setIsAuthenticated(true);
-          setTimeout(() => {
-            navigate("/dashboard");
-          }, 2200);
         }
       } catch (error) {
         toast.error("An error occurred. Please try again.", {
           position: "top-center",
-          autoClose: 2000,
+          autoClose: 500,
         });
       }
     } else {
       toast.error("Please correct the errors in the form.", {
         position: "top-center",
-        autoClose: 2000,
+        autoClose: 500,
       });
     }
     setIsSubmitting(false);
@@ -97,7 +93,6 @@ function SignIn({ setIsAuthenticated }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#020B2D] to-[#010821] flex items-center justify-center relative overflow-hidden">
-      {/* Decorative Animated Elements */}
       <motion.div
         className="absolute top-[-50px] left-[-50px] w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl"
         animate={{ x: [0, 20, 0], y: [0, 20, 0] }}
@@ -108,8 +103,6 @@ function SignIn({ setIsAuthenticated }) {
         animate={{ x: [0, -20, 0], y: [0, -20, 0] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
-
-      {/* Form Container */}
       <div className="bg-gray-800/80 rounded-lg shadow-lg p-8 w-full max-w-md relative z-10">
         <motion.h1
           className="text-3xl font-bold text-yellow-500 text-center mb-6"
@@ -126,7 +119,6 @@ function SignIn({ setIsAuthenticated }) {
           initial="hidden"
           animate="visible"
         >
-          {/* Email Field */}
           <div>
             <label className="block text-gray-300 mb-1" htmlFor="email">
               Email <span className="text-red-500">*</span>
@@ -152,7 +144,6 @@ function SignIn({ setIsAuthenticated }) {
               </motion.p>
             )}
           </div>
-          {/* Password Field */}
           <div>
             <label className="block text-gray-300 mb-1" htmlFor="password">
               Password <span className="text-red-500">*</span>
@@ -188,7 +179,6 @@ function SignIn({ setIsAuthenticated }) {
               </motion.p>
             )}
           </div>
-          {/* Forgot Password Link */}
           <div className="text-right">
             <a
               href="/forgot-password"
@@ -197,7 +187,6 @@ function SignIn({ setIsAuthenticated }) {
               Forgot Password?
             </a>
           </div>
-          {/* Submit Button */}
           <motion.button
             type="submit"
             disabled={isSubmitting}
@@ -211,7 +200,6 @@ function SignIn({ setIsAuthenticated }) {
           </motion.button>
         </motion.form>
       </div>
-      {/* ToastContainer for toast notifications */}
       <ToastContainer
         position="top-center"
         autoClose={2000}
@@ -228,4 +216,3 @@ function SignIn({ setIsAuthenticated }) {
 }
 
 export default SignIn;
-
