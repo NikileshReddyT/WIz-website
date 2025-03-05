@@ -2,11 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import homei from "../assets/homei.jpg";
 
 const heroText = "IT'S TIME TO BUILD YOUR ECONOMY GROW";
 
 function HomePage() {
   const [displayedText, setDisplayedText] = useState("");
+  const navigate = useNavigate(); // Initialize navigate function
 
   // Typewriter effect for the headline
   useEffect(() => {
@@ -45,7 +48,7 @@ function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
           >
-            WELFARE INFRA PROJECTS
+            WIZ INFRA PROJECTS
           </motion.div>
           <motion.h1
             className="text-4xl md:text-6xl font-bold text-white leading-tight"
@@ -70,6 +73,7 @@ function HomePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.5, duration: 1 }}
+            onClick={() => navigate('/signin')} // Navigate to sign-in page
           >
             Get Started
           </motion.button>
@@ -78,7 +82,7 @@ function HomePage() {
         {/* Hero Image */}
         <div className="flex-1 relative mt-12 md:mt-0">
           <motion.img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-DSBpxgx4Malr414qkwxbVhCqY5NeOc.png"
+            src={homei}
             alt="Person working on laptop"
             className="rounded-lg shadow-lg"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -107,10 +111,10 @@ function HomePage() {
           transition={{ duration: 1 }}
         >
           <h2 className="text-3xl font-bold text-white mb-4">
-            About WelfareInfraProjects
+            About WIZ InfraProjects
           </h2>
           <p className="text-gray-300 text-lg">
-            WelfareInfraProjects is a diversified enterprise operating in multiple sectors including construction, finance, technology, and more. We harness innovation and sustainable practices to drive growth and build a better future for our community.
+            WIZ InfraProjects is a diversified enterprise operating in multiple sectors including construction, finance, technology, and more. We harness innovation and sustainable practices to drive growth and build a better future for our community.
           </p>
         </motion.div>
       </div>

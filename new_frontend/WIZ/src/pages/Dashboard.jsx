@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FaHome, FaUsers, FaWallet, FaChartBar, FaExchangeAlt, FaPowerOff } from "react-icons/fa";
+import { MdGroupWork } from "react-icons/md";
 
 function Dashboard({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const userID = localStorage.getItem("userID") || "UnknownUser";
 
-  // For toggling Team and Wallet sub-menus in the sidebar
+  // State for referral link
+  const [referralLink, setReferralLink] = useState("");
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  // For toggling Team, Wallet, and Power Team sub-menus in the sidebar
   const [teamOpen, setTeamOpen] = useState(false);
+  const [levelWiseOpen, setLevelWiseOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
+  const [powerTeamOpen, setPowerTeamOpen] = useState(false);
 
   const handleSignOut = () => {
     localStorage.removeItem("isAuthenticated");
@@ -17,6 +26,52 @@ function Dashboard({ setIsAuthenticated }) {
     setIsAuthenticated(false);
     navigate("/signin");
   };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(referralLink);
+    setToastMessage("Referral link copied!");
+    setShowToast(true);
+  };
+
+  const handleMenuClick = (event) => {
+    const availableComponents = [
+      "Home",
+      "Refer Now",
+      "Direct Referrals",
+      "Level Wise",
+      "Total Team",
+      "Total Business",
+      "Tree View",
+      "Deposit",
+      "Topup",
+      "Transfer",
+      "Withdraw",
+      "Incomes",
+      "Transactions",
+      "50% Business Count",
+      "One Leg Power Team",
+      "Other Leg 50% Business",
+    ];
+
+    const clickedElement = event.target.closest("a, button");
+    if (clickedElement) {
+      const textContent = clickedElement.textContent.trim();
+      if (!availableComponents.includes(textContent)) {
+        event.preventDefault(); // Prevent navigation
+        setToastMessage("Feature coming soon!");
+        setShowToast(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000); // Hide toast after 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#020B2D] to-[#010821] relative">
@@ -32,50 +87,27 @@ function Dashboard({ setIsAuthenticated }) {
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* ======= Top Navigation Bar ======= */}
-      <header className="flex items-center justify-between bg-gray-900 px-6 py-3 shadow z-10">
-        <h1 className="text-xl text-yellow-500 font-bold">HAL WELFARE ASSOCIATES</h1>
-        <nav className="hidden md:flex items-center space-x-6 text-gray-300">
-          <a href="#!" className="hover:text-yellow-500 transition">
-            Dashboard
-          </a>
-          <a href="#!" className="hover:text-yellow-500 transition">
-            Team
-          </a>
-          <a href="#!" className="hover:text-yellow-500 transition">
-            Wallet
-          </a>
-          <a href="#!" className="hover:text-yellow-500 transition">
-            Incomes
-          </a>
-          <a href="#!" className="hover:text-yellow-500 transition">
-            Transactions
-          </a>
-        </nav>
-        <div className="text-gray-300 text-sm hidden md:block">
-          Logged in as <span className="text-yellow-500">{userID}</span>
-        </div>
-      </header>
-
       {/* ======= Main Layout ======= */}
       <div className="flex flex-1 overflow-hidden">
         {/* ======= Left Sidebar ======= */}
-        <aside className="w-64 bg-gray-900 text-gray-300 flex flex-col">
+        <aside className="w-64 bg-gray-900 text-gray-300 flex flex-col" onClick={handleMenuClick}>
           <div className="p-4 border-b border-gray-800 text-lg font-bold">
             Menu
           </div>
           <nav className="flex-1 overflow-auto p-4 space-y-2">
             <a
               href="#!"
-              className="block py-2 px-3 rounded hover:bg-gray-800 transition"
+              className="block py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition"
             >
-              Home
+              <FaHome />
+              <span>Home</span>
             </a>
             <a
               href="#!"
-              className="block py-2 px-3 rounded hover:bg-gray-800 transition"
+              className="block py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition"
             >
-              Refer Now
+              <FaChartBar />
+              <span>Refer Now</span>
             </a>
 
             {/* Team Menu */}
@@ -84,7 +116,10 @@ function Dashboard({ setIsAuthenticated }) {
                 onClick={() => setTeamOpen(!teamOpen)}
                 className="w-full flex items-center justify-between py-2 px-3 rounded hover:bg-gray-800 transition"
               >
-                <span>Team</span>
+                <span className="flex items-center space-x-2">
+                  <FaUsers />
+                  <span>Team</span>
+                </span>
                 {teamOpen ? <FiChevronUp /> : <FiChevronDown />}
               </button>
               {teamOpen && (
@@ -95,18 +130,29 @@ function Dashboard({ setIsAuthenticated }) {
                   >
                     Direct Referrals
                   </a>
-                  <a
-                    href="#!"
-                    className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
+                  <button
+                    onClick={() => setLevelWiseOpen(!levelWiseOpen)}
+                    className="w-full flex items-center justify-between py-1 px-3 rounded hover:bg-gray-800 text-sm transition"
                   >
-                    Left Team
-                  </a>
-                  <a
-                    href="#!"
-                    className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
-                  >
-                    Right Team
-                  </a>
+                    <span>Level Wise</span>
+                    {levelWiseOpen ? <FiChevronUp /> : <FiChevronDown />}
+                  </button>
+                  {levelWiseOpen && (
+                    <div className="pl-6 mt-1 space-y-1">
+                      <a
+                        href="#!"
+                        className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
+                      >
+                        Total Team
+                      </a>
+                      <a
+                        href="#!"
+                        className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
+                      >
+                        Total Business
+                      </a>
+                    </div>
+                  )}
                   <a
                     href="#!"
                     className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
@@ -123,7 +169,10 @@ function Dashboard({ setIsAuthenticated }) {
                 onClick={() => setWalletOpen(!walletOpen)}
                 className="w-full flex items-center justify-between py-2 px-3 rounded hover:bg-gray-800 transition"
               >
-                <span>Wallet</span>
+                <span className="flex items-center space-x-2">
+                  <FaWallet />
+                  <span>Wallet</span>
+                </span>
                 {walletOpen ? <FiChevronUp /> : <FiChevronDown />}
               </button>
               {walletOpen && (
@@ -158,49 +207,73 @@ function Dashboard({ setIsAuthenticated }) {
 
             <a
               href="#!"
-              className="block py-2 px-3 rounded hover:bg-gray-800 transition"
+              className="block py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition"
             >
-              Incomes
+              <FaExchangeAlt />
+              <span>Incomes</span>
             </a>
             <a
               href="#!"
-              className="block py-2 px-3 rounded hover:bg-gray-800 transition"
+              className="block py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition"
             >
-              Transactions
+              <FaExchangeAlt />
+              <span>Transactions</span>
             </a>
-          </nav>
 
-          {/* Footer Section (Sidebar) */}
-          <div className="p-4 border-t border-gray-800 space-y-2">
-            <a
-              href="https://wa.me/1234567890"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-center w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded transition"
-            >
-              Contact on WhatsApp
-            </a>
-            <button
-              onClick={handleSignOut}
-              className="block w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded transition"
-            >
-              Sign Out
-            </button>
-          </div>
+            {/* Power Team Menu */}
+            <div>
+              <button
+                onClick={() => setPowerTeamOpen(!powerTeamOpen)}
+                className="w-full flex items-center justify-between py-2 px-3 rounded hover:bg-gray-800 transition"
+              >
+                <span className="flex items-center space-x-2">
+                  <MdGroupWork />
+                  <span>Power Team</span>
+                </span>
+                {powerTeamOpen ? <FiChevronUp /> : <FiChevronDown />}
+              </button>
+              {powerTeamOpen && (
+                <div className="pl-6 mt-1 space-y-1">
+                  <a
+                    href="#!"
+                    className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
+                  >
+                    50% Business Count
+                  </a>
+                  <a
+                    href="#!"
+                    className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
+                  >
+                    One Leg Power Team
+                  </a>
+                  <a
+                    href="#!"
+                    className="block py-1 px-3 rounded hover:bg-gray-800 text-sm"
+                  >
+                    Other Leg 50% Business
+                  </a>
+                </div>
+              )}
+            </div>
+          </nav>
         </aside>
 
         {/* ======= Main Content ======= */}
         <main className="flex-1 bg-gray-100 overflow-auto">
-          {/* Page Header */}
-          <div className="p-6 border-b border-gray-300 bg-white shadow">
-            <h2 className="text-2xl font-semibold text-gray-800">Dashboard</h2>
-            <p className="text-gray-500">Welcome back, {userID}!</p>
+          <div className="p-6 border-b border-gray-300 bg-white shadow flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800">Dashboard</h2>
+              <p className="text-gray-500">Welcome back, {userID}!</p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition"
+            >
+              Sign Out
+            </button>
           </div>
-
           <div className="p-6 space-y-6">
-            {/* Top Row Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Package Card */}
               <motion.div
                 className="bg-white shadow rounded p-6"
                 initial={{ opacity: 0, y: 20 }}
@@ -210,12 +283,10 @@ function Dashboard({ setIsAuthenticated }) {
                 <h3 className="text-lg font-semibold mb-2 text-gray-700">
                   Package
                 </h3>
-                <p className="text-2xl text-blue-600">P0</p>
+                <p className="text-2xl text-blue-600">₹0</p>
               </motion.div>
-
-              {/* Referral Links Card */}
               <motion.div
-                className="bg-white shadow rounded p-6 flex flex-col"
+                className="bg-white shadow rounded p-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
@@ -223,15 +294,25 @@ function Dashboard({ setIsAuthenticated }) {
                 <h3 className="text-lg font-semibold mb-4 text-gray-700">
                   Your Referral Links
                 </h3>
-                <button className="mb-2 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
-                  Copy Left Referral Link
-                </button>
-                <button className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
-                  Copy Right Referral Link
-                </button>
+                {!referralLink ? (
+                  <button
+                    onClick={() => setReferralLink(`https://referral.app/${userID}`)}
+                    className="mb-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
+                  >
+                    Generate Referral Link
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">{referralLink}</p>
+                    <button
+                      onClick={copyToClipboard}
+                      className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
+                    >
+                      Copy Referral Link
+                    </button>
+                  </div>
+                )}
               </motion.div>
-
-              {/* Wallet Card */}
               <motion.div
                 className="bg-white shadow rounded p-6"
                 initial={{ opacity: 0, y: 20 }}
@@ -241,45 +322,19 @@ function Dashboard({ setIsAuthenticated }) {
                 <h3 className="text-lg font-semibold mb-2 text-gray-700">
                   Wallet
                 </h3>
-                <p className="text-xl text-gray-800">
-                  Your Earning Wallet:{" "}
-                  <span className="font-bold text-green-600">₹ 5000</span>
-                </p>
+                <p className="text-2xl text-green-500">₹0.00</p>
               </motion.div>
             </div>
-
-            {/* Activities Section */}
-            <motion.div
-              className="bg-white shadow rounded p-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">
-                Activities
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                <div>
-                  <p className="text-sm text-gray-500">Total Business</p>
-                  <p className="text-xl font-semibold text-blue-600">₹ 10,000</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Today Business</p>
-                  <p className="text-xl font-semibold text-blue-600">₹ 2,000</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Right Team</p>
-                  <p className="text-xl font-semibold text-blue-600">50</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Left Team</p>
-                  <p className="text-xl font-semibold text-blue-600">45</p>
-                </div>
-              </div>
-            </motion.div>
           </div>
         </main>
       </div>
+
+      {/* Toast Message */}
+      {showToast && (
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white py-2 px-4 rounded shadow">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

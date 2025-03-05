@@ -1,9 +1,9 @@
 // src/pages/About.jsx
 import React from "react";
 import { motion } from "framer-motion";
-import aboutHeroImg from "../assets/aboutHeroImg.jpg";
-import whoWeAreImg from "../assets/whoWeAreImg.jpg";
-import dottedLine from "../assets/dottedLine.png";
+import about from "../assets/about.jpg";
+import weare from "../assets/weare.jpg";
+import dt from "../assets/dt.png";
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
@@ -21,7 +21,7 @@ function About() {
       {/* Hero/Banner Section */}
       <section className="relative py-24">
         <img
-          src={aboutHeroImg}
+          src={about}
           alt="About Hero"
           className="absolute inset-0 w-full h-full object-cover opacity-10"
         />
@@ -40,7 +40,7 @@ function About() {
             initial="hidden"
             animate="visible"
           >
-            WelfareInfraProjects is a diversified enterprise operating across multiple industries including sand business, granite extraction, electric vehicle technology, gold trading, stock market investments, construction, open plots selling, agro farming, and banking. We are dedicated to sustainability and innovation, delivering high-quality products and services while upholding ethical practices.
+            WIZ InfraProjects is a diversified enterprise operating across multiple industries including sand business, granite extraction, electric vehicle technology, gold trading, stock market investments, construction, open plots selling, agro farming, and banking. We are dedicated to sustainability and innovation, delivering high-quality products and services while upholding ethical practices.
           </motion.p>
         </div>
       </section>
@@ -52,7 +52,7 @@ function About() {
         initial="hidden"
         animate="visible"
       >
-        <img src={dottedLine} alt="Divider" className="h-6 w-auto opacity-70" />
+        <img src={dt} alt="Divider" className="h-6 w-auto opacity-70" />
       </motion.div>
 
       {/* WHO WE ARE Section */}
@@ -66,7 +66,7 @@ function About() {
             viewport={{ once: true }}
           >
             <img
-              src={whoWeAreImg}
+              src={weare}
               alt="Who We Are"
               className="w-full rounded-lg shadow-lg"
             />
@@ -82,7 +82,7 @@ function About() {
               WHO WE ARE?
             </h2>
             <p className="text-lg text-gray-300">
-              With over 10 years of industry experience, our team at WelfareInfraProjects stands as a trusted leader in its fields. We combine quality, innovation, and ethical business practices to exceed client expectations while making a positive impact in our community.
+              With over 10 years of industry experience, our team at WIZ InfraProjects stands as a trusted leader in its fields. We combine quality, innovation, and ethical business practices to exceed client expectations while making a positive impact in our community.
             </p>
           </motion.div>
         </div>
