@@ -21,36 +21,38 @@ public class UserService {
     private BCryptPasswordEncoder passwordEncoder;
 
     public User registerUser(RegisterRequest registerRequest) {
-        if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
-            throw new RuntimeException("Passwords do not match.");
-        }
-
+        // Removed confirmPassword check since it's no longer part of RegisterRequest
         Optional<User> existingUser = userRepository.findByEmail(registerRequest.getEmail());
         if (existingUser.isPresent()) {
             throw new RuntimeException("User with this email already exists.");
         }
 
         String hashedPassword = passwordEncoder.encode(registerRequest.getPassword());
-        User newUser = new User(registerRequest.getName(), registerRequest.getEmail(), hashedPassword, Role.USER);
+        // Create new user including username and phone, with default role USER
+        User newUser = new User(
+                registerRequest.getName(),
+                registerRequest.getUsername(),
+                registerRequest.getEmail(),
+                hashedPassword,
+                registerRequest.getPhone(),
+                Role.USER
+        );
         return userRepository.save(newUser);
     }
 
-    // Method for admin to create users with any role
-    public User createUser(String name, String email, String password, Role role) {
+    // Method for admin to create users with any role, now including username and phone
+    public User createUser(String name, String username, String email, String password, String phone, Role role) {
         Optional<User> existingUser = userRepository.findByEmail(email);
         if (existingUser.isPresent()) {
             throw new RuntimeException("User with this email already exists.");
         }
         String hashedPassword = passwordEncoder.encode(password);
-        User newUser = new User(name, email, hashedPassword, role);
+        User newUser = new User(name, username, email, hashedPassword, phone, role);
         return userRepository.save(newUser);
     }
 
     public User loginUser(LoginRequest loginRequest) {
-        System.out.println(loginRequest.getEmail());
-        System.out.println(loginRequest.getPassword());
         Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
-        System.out.println(userOpt.get().getEmail());
         if (!userOpt.isPresent() || !passwordEncoder.matches(loginRequest.getPassword(), userOpt.get().getPassword())) {
             throw new RuntimeException("Invalid email or password.");
         }

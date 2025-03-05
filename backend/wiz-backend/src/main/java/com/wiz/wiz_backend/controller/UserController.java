@@ -17,8 +17,15 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> addUser(@RequestBody AddUserRequest addUserRequest) {
         try {
-            User user = userService.createUser(addUserRequest.getName(), addUserRequest.getEmail(),
-                    addUserRequest.getPassword(), addUserRequest.getRole());
+            // Updated to include username and phone
+            User user = userService.createUser(
+                    addUserRequest.getName(), 
+                    addUserRequest.getUsername(),
+                    addUserRequest.getEmail(),
+                    addUserRequest.getPassword(), 
+                    addUserRequest.getPhone(), 
+                    addUserRequest.getRole()
+            );
             return ResponseEntity.ok("User created successfully with ID: " + user.getId());
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());

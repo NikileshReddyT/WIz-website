@@ -14,34 +14,46 @@ function SignUp({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    phone: "",
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validate = () => {
     const errors = {};
+    // Name validation
     if (!formData.name.trim()) {
       errors.name = "Name is required.";
     } else if (formData.name.length < 3) {
       errors.name = "Name must be at least 3 characters.";
     }
-    if (!formData.email.trim()) {
-      errors.email = "Email is required.";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email is invalid.";
+    // Username validation
+    if (!formData.username.trim()) {
+      errors.username = "User name is required.";
+    } else if (formData.username.length < 3) {
+      errors.username = "User name must be at least 3 characters.";
     }
+    // Email validation
+    if (!formData.email.trim()) {
+      errors.email = "Mail ID is required.";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Mail ID is invalid.";
+    }
+    // Password validation
     if (!formData.password.trim()) {
       errors.password = "Password is required.";
     } else if (formData.password.length < 8) {
       errors.password = "Password must be at least 8 characters.";
     }
-    if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match.";
+    // Phone number validation (simple pattern: digits only, 10–15 digits)
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required.";
+    } else if (!/^\d{10,15}$/.test(formData.phone)) {
+      errors.phone = "Phone number must be 10 to 15 digits.";
     }
     return errors;
   };
@@ -162,10 +174,37 @@ function SignUp({ setIsAuthenticated }) {
               )}
             </div>
 
-            {/* Email Field */}
+            {/* User Name Field */}
+            <div>
+              <label className="block text-gray-300 mb-1" htmlFor="username">
+                User Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="username"
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                aria-invalid={errors.username ? "true" : "false"}
+                required
+                className="mt-1 block w-full border border-gray-700 rounded-md p-2 bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.username && (
+                <motion.p
+                  className="text-red-500 text-sm mt-1"
+                  variants={fadeUpVariant}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {errors.username}
+                </motion.p>
+              )}
+            </div>
+
+            {/* Mail ID Field */}
             <div>
               <label className="block text-gray-300 mb-1" htmlFor="email">
-                Email <span className="text-red-500">*</span>
+                Mail ID <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -226,42 +265,30 @@ function SignUp({ setIsAuthenticated }) {
               )}
             </div>
 
-            {/* Confirm Password Field */}
+            {/* Phone Number Field */}
             <div>
-              <label
-                className="block text-gray-300 mb-1"
-                htmlFor="confirmPassword"
-              >
-                Confirm Password <span className="text-red-500">*</span>
+              <label className="block text-gray-300 mb-1" htmlFor="phone">
+                Phone Number <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  aria-invalid={errors.confirmPassword ? "true" : "false"}
-                  required
-                  className="mt-1 block w-full border border-gray-700 rounded-md p-2 pr-10 bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-2 text-gray-400"
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-              {errors.confirmPassword && (
+              <input
+                id="phone"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                aria-invalid={errors.phone ? "true" : "false"}
+                required
+                placeholder="Enter digits only"
+                className="mt-1 block w-full border border-gray-700 rounded-md p-2 bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              {errors.phone && (
                 <motion.p
                   className="text-red-500 text-sm mt-1"
                   variants={fadeUpVariant}
                   initial="hidden"
                   animate="visible"
                 >
-                  {errors.confirmPassword}
+                  {errors.phone}
                 </motion.p>
               )}
             </div>
