@@ -68,7 +68,7 @@ function SignUp({ setIsAuthenticated }) {
         };
 
         const response = await axios.post(
-          "http://localhost:8080/api/auth/register",
+          "https://wiz-website-production.up.railway.app/api/auth/register",
           formData,
           config
         );

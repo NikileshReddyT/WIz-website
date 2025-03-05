@@ -15,7 +15,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                     // Change allowedOrigins to match your frontend URL. "*" allows all origins.
-                    .allowedOrigins("http://localhost:5173")
+                    .allowedOrigins("http://localhost:5173", "https://wizinfra.vercel.app")
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*")
                     .allowCredentials(true);
