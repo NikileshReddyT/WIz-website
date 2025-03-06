@@ -26,16 +26,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Bypass token validation for public endpoints
-        if (path.equals("/api/auth/login") || path.equals("/api/auth/register")) {
+        if (path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")) {
             chain.doFilter(request, response);
             return;
         }
 
         String token = jwtTokenProvider.resolveToken(request);
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Authentication auth = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+        if (token == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
+
+        if (jwtTokenProvider.validateToken(token)) {
+            try {
+                Authentication auth = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
         chain.doFilter(request, response);
     }
 }

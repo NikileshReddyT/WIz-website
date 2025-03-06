@@ -57,21 +57,34 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
-            return true;
+            Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+            return !isTokenExpired(claims.getExpiration());
         } catch (Exception e) {
             return false;
         }
     }
 
+    private boolean isTokenExpired(Date expiration) {
+        return expiration.before(new Date());
+    }
+
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
-        String email = claims.getSubject();
-        String role = (String) claims.get("role");
-        return new UsernamePasswordAuthenticationToken(
-            email,
-            null,
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-        );
+        try {
+            Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+            String email = claims.getSubject();
+            String role = (String) claims.get("role");
+            
+            if (email == null || role == null) {
+                throw new IllegalArgumentException("Invalid token claims");
+            }
+
+            return new UsernamePasswordAuthenticationToken(
+                email,
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid token");
+        }
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -57,5 +58,14 @@ public class UserService {
             throw new RuntimeException("Invalid email or password.");
         }
         return userOpt.get();
+    }
+
+    public List<User> getAllUsers() {
+        try {
+            return userRepository.findAll();
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching users: " + e.getMessage());
+        }
+
     }
 }
