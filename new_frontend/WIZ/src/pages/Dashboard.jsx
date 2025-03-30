@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiChevronDown, FiChevronUp, FiMenu, FiX } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiChevronUp,
+  FiMenu,
+  FiX,
+  FiLoader,
+} from "react-icons/fi";
 import {
   FaHome,
   FaUsers,
@@ -15,9 +21,87 @@ import {
   FaUserFriends,
   FaChartLine,
   FaUserShield,
+  FaEdit,
+  FaTrashAlt,
 } from "react-icons/fa";
 import { MdGroupWork, MdAccountBalance } from "react-icons/md";
 import axios from "axios";
+
+// --- Reusable Components ---
+
+// Sidebar Item Button
+const SidebarButton = ({
+  icon,
+  label,
+  onClick,
+  isActive,
+  hasSubmenu = false,
+  isOpen = false,
+}) => (
+  <button
+    onClick={onClick}
+    className={`w-full text-left py-2.5 px-4 rounded-md flex items-center justify-between text-sm transition-colors duration-200 ${
+      isActive
+        ? "bg-blue-600 text-white"
+        : "text-gray-300 hover:bg-gray-700 hover:text-gray-100"
+    }`}
+  >
+    <div className="flex items-center space-x-3">
+      {icon && React.createElement(icon, { className: "w-5 h-5" })}
+      <span>{label}</span>
+    </div>
+    {hasSubmenu && (isOpen ? <FiChevronUp /> : <FiChevronDown />)}
+  </button>
+);
+
+// Sidebar Sub-Item Button
+const SidebarSubButton = ({ label, onClick, isActive }) => (
+  <button
+    onClick={onClick}
+    className={`w-full text-left py-2 pl-11 pr-4 rounded-md flex items-center space-x-3 text-sm transition-colors duration-200 ${
+      isActive
+        ? "bg-gray-700 text-white"
+        : "text-gray-400 hover:bg-gray-700 hover:text-gray-100"
+    }`}
+  >
+    <span>{label}</span>
+  </button>
+);
+
+// Simple Card Component
+const InfoCard = ({ title, value, icon, colorClass = "text-gray-700" }) => (
+  <motion.div
+    className="bg-white shadow-md rounded-lg p-6 flex items-center space-x-4 border border-gray-200"
+    whileHover={{
+      y: -4,
+      boxShadow:
+        "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+  >
+    <div className={`p-3 rounded-full bg-opacity-10 ${colorClass.replace("text-", "bg-")}`}>
+      {icon && React.createElement(icon, { className: `w-6 h-6 ${colorClass}` })}
+    </div>
+    <div>
+      <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+        {title}
+      </h3>
+      <p className={`text-xl md:text-2xl font-semibold ${colorClass}`}>
+        {value}
+      </p>
+    </div>
+  </motion.div>
+);
+
+// Loading Indicator
+const LoadingSpinner = ({ text = "Loading..." }) => (
+  <div className="flex flex-col justify-center items-center h-40 text-gray-500">
+    <FiLoader className="animate-spin h-8 w-8 mb-3 text-blue-600" />
+    <span>{text}</span>
+  </div>
+);
+
+// --- Main Dashboard Component ---
 
 function Dashboard({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -26,45 +110,59 @@ function Dashboard({ setIsAuthenticated }) {
   const userRole = localStorage.getItem("userRole") || "USER";
   const token = localStorage.getItem("token");
 
-  // State for toggling sub-menus
-  const [teamOpen, setTeamOpen] = useState(false);
-  const [levelWiseOpen, setLevelWiseOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
-  const [powerTeamOpen, setPowerTeamOpen] = useState(false);
+  const [activeComponent, setActiveComponent] = useState("Home");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [openMenus, setOpenMenus] = useState({
+    team: false,
+    business: false,
+    wallet: false,
+    income: false,
+  });
   const [users, setUsers] = useState([]);
-  const [activeComponent, setActiveComponent] = useState("Home");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
-  // Handle window resize
+  const toggleMenu = (menu) => {
+    setOpenMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
+  };
+
+  // --- Effects ---
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < 1024) {
         setIsSidebarOpen(false);
       } else {
         setIsSidebarOpen(true);
       }
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleSignOut = () => {
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("userID");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
-    navigate("/signin");
-  };
-
-  // Fetch user list for admin
   useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (window.innerWidth < 1024 && isSidebarOpen) {
+        const sidebar = document.getElementById("sidebar");
+        const toggleButton = document.getElementById("sidebar-toggle");
+        if (
+          sidebar &&
+          !sidebar.contains(event.target) &&
+          toggleButton &&
+          !toggleButton.contains(event.target)
+        ) {
+          setIsSidebarOpen(false);
+        }
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSidebarOpen]);
+
+  const fetchUsers = useCallback(() => {
     if (userRole === "ADMIN") {
+      setIsLoadingUsers(true);
       axios
         .get("https://wiz-website-production.up.railway.app/api/users", {
           headers: { Authorization: `Bearer ${token}` },
@@ -72,42 +170,40 @@ function Dashboard({ setIsAuthenticated }) {
         })
         .then((res) => {
           console.log("API Response for /api/users:", res.data);
-          // Ensure the response data is an array before setting state
           if (Array.isArray(res.data)) {
             setUsers(res.data);
           } else {
-            console.error(
-              "API response for /api/users is not an array:",
-              res.data
-            );
-            setUsers([]); // Reset to empty array if data is not as expected
+            console.error("API response for /api/users is not an array:", res.data);
+            setUsers([]);
             setToastMessage("Received invalid user data format from server.");
             setShowToast(true);
           }
         })
         .catch((err) => {
           console.error("Error fetching users:", err);
-          // Check if the error is CORS related even if status code isn't explicit
+          let message = "Failed to fetch users data.";
           if (
             err.message.toLowerCase().includes("network error") ||
             err.code === "ERR_NETWORK"
           ) {
-            setToastMessage("Network error or CORS issue fetching users.");
+            message = "Network error or CORS issue fetching users.";
           } else if (err.response) {
-            // Handle specific HTTP error statuses
-            setToastMessage(
-              `Failed to fetch users: ${err.response.status} ${err.response.statusText}`
-            );
-          } else {
-            setToastMessage("Failed to fetch users data.");
+            message = `Failed to fetch users: ${err.response.status} ${err.response.statusText}`;
           }
+          setToastMessage(message);
           setShowToast(true);
-          setUsers([]); // Ensure users is an empty array on error
+          setUsers([]);
+        })
+        .finally(() => {
+          setIsLoadingUsers(false);
         });
     }
   }, [userRole, token]);
 
-  // Hide toast automatically
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => setShowToast(false), 3000);
@@ -115,634 +211,399 @@ function Dashboard({ setIsAuthenticated }) {
     }
   }, [showToast]);
 
-  // Close sidebar on mobile when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (window.innerWidth < 768 && isSidebarOpen) {
-        const sidebar = document.getElementById("sidebar");
-        const toggleButton = document.getElementById("sidebar-toggle");
-        if (
-          sidebar &&
-          !sidebar.contains(event.target) &&
-          !toggleButton?.contains(event.target)
-        ) {
-          setIsSidebarOpen(false);
-        }
-      }
-    };
+  // --- Handlers ---
+  const handleSignOut = () => {
+    localStorage.clear();
+    setIsAuthenticated(false);
+    navigate("/signin");
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isSidebarOpen]);
-
-  // Close sidebar on mobile when selecting a menu item
   const handleMenuClick = (component) => {
     setActiveComponent(component);
-    if (window.innerWidth < 768) {
+    if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
+    if (component === "Manage Users") {
+      fetchUsers();
+    }
   };
+
+  // --- Render Logic ---
+  const ContentWrapper = ({ children, title }) => (
+    <div className="bg-white shadow-md rounded-lg p-4 sm:p-6 border border-gray-200">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4 sm:mb-6">
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
 
   const renderContent = () => {
     switch (activeComponent) {
       case "Home":
         return (
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-            <motion.div className='bg-white shadow rounded p-6'>
-              <h3 className='text-lg font-semibold mb-2 text-gray-700'>
-                Welcome
-              </h3>
-              <p className='text-gray-600'>Hello, {userEmail}</p>
-              <p className='text-gray-600'>Role: {userRole}</p>
-            </motion.div>
-            {userRole === "USER" && (
-              <>
-                <motion.div className='bg-white shadow rounded p-6'>
-                  <h3 className='text-lg font-semibold mb-2 text-gray-700'>
-                    Package
-                  </h3>
-                  <p className='text-2xl text-blue-600'>₹0</p>
-                </motion.div>
-                <motion.div className='bg-white shadow rounded p-6'>
-                  <h3 className='text-lg font-semibold mb-2 text-gray-700'>
-                    Wallet
-                  </h3>
-                  <p className='text-2xl text-green-500'>₹0.00</p>
-                </motion.div>
-              </>
-            )}
+          <div className="space-y-6">
+            {/* Hero Section */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg p-6 sm:p-10 text-white shadow-md">
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                Welcome back!
+              </h1>
+              <p className="mt-2 text-sm sm:text-base">
+                Here’s a quick overview of your dashboard. Explore the sections using the sidebar.
+              </p>
+            </div>
+
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+              <InfoCard
+                title="Your Role"
+                value={userRole}
+                icon={FaUserShield}
+                colorClass="text-purple-600"
+              />
+              {userRole === "USER" && (
+                <>
+                  <InfoCard
+                    title="Current Package"
+                    value="₹0"
+                    icon={MdGroupWork}
+                    colorClass="text-indigo-600"
+                  />
+                  <InfoCard
+                    title="Wallet Balance"
+                    value="₹0.00"
+                    icon={FaWallet}
+                    colorClass="text-green-600"
+                  />
+                </>
+              )}
+              {userRole === "ADMIN" && (
+                <InfoCard
+                  title="Total Users"
+                  value={isLoadingUsers ? "Loading..." : users.length}
+                  icon={FaUsers}
+                  colorClass="text-teal-600"
+                />
+              )}
+            </div>
+
+            {/* Getting Started Section */}
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 sm:p-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                Let’s Get Started!
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Use the sidebar to navigate through different sections. Manage your account or check your referrals.
+              </p>
+              <button
+                onClick={() =>
+                  handleMenuClick(userRole === "ADMIN" ? "Manage Users" : "Refer Now")
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                {userRole === "ADMIN" ? "Manage Users" : "Refer a Friend"}
+              </button>
+            </div>
           </div>
         );
+
+      case "Profile":
+        return (
+          <ContentWrapper title="Your Profile">
+            <div className="space-y-4">
+              <div>
+                <strong>User ID:</strong> {userID}
+              </div>
+              <div>
+                <strong>Email:</strong> {userEmail}
+              </div>
+              <div>
+                <strong>Role:</strong> {userRole}
+              </div>
+            </div>
+          </ContentWrapper>
+        );
+
       case "Manage Users":
         return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              User Management
-            </h3>
-            <div className='overflow-x-auto'>
-              <div className='min-w-full inline-block align-middle'>
-                <div className='overflow-hidden'>
-                  <table className='min-w-full divide-y divide-gray-200'>
-                    <thead className='bg-gray-50'>
-                      <tr>
+          <ContentWrapper title="User Management">
+            {isLoadingUsers ? (
+              <LoadingSpinner text="Fetching Users..." />
+            ) : users.length === 0 ? (
+              <p className="text-center text-gray-500 py-4">No users found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {[
+                        "ID",
+                        "Name",
+                        "Username",
+                        "Email",
+                        "Phone",
+                        "Role",
+                        "Actions",
+                      ].map((header) => (
                         <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
+                          key={header}
+                          scope="col"
+                          className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
-                          ID
+                          {header}
                         </th>
-                        <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                        >
-                          Name
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                        >
-                          Username
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                        >
-                          Email
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                        >
-                          Phone
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                        >
-                          Role
-                        </th>
-                        <th
-                          scope='col'
-                          className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className='bg-white divide-y divide-gray-200'>
-                      {users.map((user) => (
-                        <tr key={user.id} className='hover:bg-gray-50'>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {user.id}
-                          </td>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {user.name}
-                          </td>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {user.username}
-                          </td>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {user.email}
-                          </td>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {user.phone}
-                          </td>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                            {user.role}
-                          </td>
-                          <td className='px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2'>
-                            <button className='text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md'>
-                              Edit
-                            </button>
-                            <button className='text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-md'>
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {user.id}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                          {user.name}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {user.username}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {user.email}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {user.phone}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm">
+                          <span
+                            className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              user.role === "ADMIN"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-sm font-medium space-x-3">
+                          <button
+                            aria-label="Edit User"
+                            className="text-indigo-600 hover:text-indigo-800 transition-colors duration-150 p-1"
+                          >
+                            <FaEdit size={16} />
+                          </button>
+                          <button
+                            aria-label="Delete User"
+                            className="text-red-600 hover:text-red-800 transition-colors duration-150 p-1"
+                          >
+                            <FaTrashAlt size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </div>
+            )}
+          </ContentWrapper>
         );
+
       case "Refer Now":
         return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Referral Program
-            </h3>
-            <div className='space-y-4'>
-              <p className='text-gray-600'>Your Referral Link:</p>
-              <div className='flex items-center space-x-2'>
-                <input
-                  type='text'
-                  readOnly
-                  value={`https://referral.app/${userID}`}
-                  className='flex-1 p-2 border rounded'
-                />
-                <button className='bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition'>
-                  Copy
-                </button>
-              </div>
+          <ContentWrapper title="Referral Program">
+            <p className="text-gray-600 mb-3">
+              Share your unique link to invite others:
+            </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={`https://referral.app/${userID}`}
+                className="flex-grow p-2 border border-gray-300 rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                aria-label="Referral Link"
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://referral.app/${userID}`);
+                  setToastMessage("Referral link copied!");
+                  setShowToast(true);
+                }}
+                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex-shrink-0"
+              >
+                Copy Link
+              </button>
             </div>
-          </div>
+          </ContentWrapper>
         );
-      case "Direct Referrals":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Direct Referrals
-            </h3>
-            <p className='text-gray-600'>
-              Your direct referral list will appear here.
-            </p>
-          </div>
-        );
-      case "Level Wise":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Level Wise Team
-            </h3>
-            <p className='text-gray-600'>
-              Your level-wise team structure will appear here.
-            </p>
-          </div>
-        );
-      case "Total Team":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Total Team
-            </h3>
-            <p className='text-gray-600'>
-              Your complete team structure will appear here.
-            </p>
-          </div>
-        );
-      case "Total Business":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Total Business
-            </h3>
-            <p className='text-gray-600'>
-              Your total business statistics will appear here.
-            </p>
-          </div>
-        );
-      case "Tree View":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Team Tree View
-            </h3>
-            <p className='text-gray-600'>
-              Your team tree visualization will appear here.
-            </p>
-          </div>
-        );
-      case "Deposit":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Deposit Funds
-            </h3>
-            <p className='text-gray-600'>Deposit form will appear here.</p>
-          </div>
-        );
-      case "Topup":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Top Up Wallet
-            </h3>
-            <p className='text-gray-600'>Top-up form will appear here.</p>
-          </div>
-        );
-      case "Transfer":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Transfer Funds
-            </h3>
-            <p className='text-gray-600'>Transfer form will appear here.</p>
-          </div>
-        );
-      case "Withdraw":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Withdraw Funds
-            </h3>
-            <p className='text-gray-600'>Withdrawal form will appear here.</p>
-          </div>
-        );
-      case "Incomes":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Income Details
-            </h3>
-            <p className='text-gray-600'>
-              Your income details will appear here.
-            </p>
-          </div>
-        );
-      case "Transactions":
-        return (
-          <div className='bg-white shadow rounded p-6'>
-            <h3 className='text-lg font-semibold mb-4 text-gray-700'>
-              Transaction History
-            </h3>
-            <p className='text-gray-600'>
-              Your transaction history will appear here.
-            </p>
-          </div>
-        );
+
       default:
-        return <div>Select a menu item</div>;
+        return (
+          <ContentWrapper title={activeComponent}>
+            <p className="text-gray-500">Content for this section will be available soon.</p>
+          </ContentWrapper>
+        );
     }
   };
 
+  // --- JSX Return ---
   return (
-    <div className='min-h-screen flex flex-col bg-gradient-to-br from-[#020B2D] to-[#010821] relative'>
-      {/* Decorative Animated Circles */}
-      <motion.div
-        className='absolute top-[-50px] left-[-50px] w-32 h-32 bg-yellow-500/20 rounded-full blur-2xl'
-        animate={{ x: [0, 20, 0], y: [0, 20, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className='absolute bottom-[-50px] right-[-50px] w-40 h-40 bg-green-500/20 rounded-full blur-2xl'
-        animate={{ x: [0, -20, 0], y: [0, -20, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Main Layout */}
-      <div className='flex flex-1 overflow-hidden'>
-        {/* Mobile Toggle Button */}
-        <button
-          id='sidebar-toggle'
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className='md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-gray-800 text-white hover:bg-gray-700 transition'
-        >
-          {isSidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-        </button>
-
-        {/* Sidebar */}
-        <AnimatePresence>
-          {isSidebarOpen && (
-            <motion.aside
-              id='sidebar'
-              initial={{ x: -300 }}
-              animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              transition={{ type: "spring", damping: 20 }}
-              className='fixed md:relative w-64 bg-gray-900 text-gray-300 flex flex-col h-full z-40'
-            >
-              <div className='p-4 border-b border-gray-800 text-lg font-bold flex justify-between items-center'>
-                <span>Menu</span>
-                <button
-                  onClick={() => setIsSidebarOpen(false)}
-                  className='md:hidden p-2 hover:bg-gray-800 rounded'
-                >
-                  <FiX size={20} />
-                </button>
-              </div>
-              <nav className='flex-1 overflow-auto p-4 space-y-2'>
-                {/* Common Menu Items */}
-                <button
-                  onClick={() => handleMenuClick("Home")}
-                  className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                    activeComponent === "Home" ? "bg-gray-800" : ""
-                  }`}
-                >
-                  <FaHome />
-                  <span>Home</span>
-                </button>
-
-                {/* User-specific Menu Items */}
-                {userRole === "USER" && (
-                  <>
-                    <button
-                      onClick={() => handleMenuClick("Refer Now")}
-                      className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                        activeComponent === "Refer Now" ? "bg-gray-800" : ""
-                      }`}
-                    >
-                      <FaUserPlus />
-                      <span>Refer Now</span>
-                    </button>
-
-                    {/* Team Section */}
-                    <div>
-                      <button
-                        onClick={() => setTeamOpen(!teamOpen)}
-                        className='w-full text-left py-2 px-3 rounded flex items-center justify-between hover:bg-gray-800 transition'
-                      >
-                        <div className='flex items-center space-x-2'>
-                          <FaUserFriends />
-                          <span>Team</span>
-                        </div>
-                        {teamOpen ? <FiChevronUp /> : <FiChevronDown />}
-                      </button>
-                      {teamOpen && (
-                        <div className='ml-4 space-y-2 mt-2'>
-                          <button
-                            onClick={() => handleMenuClick("Direct Referrals")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Direct Referrals"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Direct Referrals</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Level Wise")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Level Wise"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Level Wise</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Total Team")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Total Team"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Total Team</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Tree View")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Tree View"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Tree View</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Business Section */}
-                    <div>
-                      <button
-                        onClick={() => setLevelWiseOpen(!levelWiseOpen)}
-                        className='w-full text-left py-2 px-3 rounded flex items-center justify-between hover:bg-gray-800 transition'
-                      >
-                        <div className='flex items-center space-x-2'>
-                          <FaChartBar />
-                          <span>Business</span>
-                        </div>
-                        {levelWiseOpen ? <FiChevronUp /> : <FiChevronDown />}
-                      </button>
-                      {levelWiseOpen && (
-                        <div className='ml-4 space-y-2 mt-2'>
-                          <button
-                            onClick={() => handleMenuClick("Total Business")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Total Business"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Total Business</span>
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleMenuClick("50% Business Count")
-                            }
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "50% Business Count"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>50% Business Count</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Wallet Section */}
-                    <div>
-                      <button
-                        onClick={() => setWalletOpen(!walletOpen)}
-                        className='w-full text-left py-2 px-3 rounded flex items-center justify-between hover:bg-gray-800 transition'
-                      >
-                        <div className='flex items-center space-x-2'>
-                          <FaWallet />
-                          <span>Wallet</span>
-                        </div>
-                        {walletOpen ? <FiChevronUp /> : <FiChevronDown />}
-                      </button>
-                      {walletOpen && (
-                        <div className='ml-4 space-y-2 mt-2'>
-                          <button
-                            onClick={() => handleMenuClick("Deposit")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Deposit" ? "bg-gray-800" : ""
-                            }`}
-                          >
-                            <span>Deposit</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Topup")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Topup" ? "bg-gray-800" : ""
-                            }`}
-                          >
-                            <span>Topup</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Transfer")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Transfer"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Transfer</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Withdraw")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Withdraw"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Withdraw</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Income Section */}
-                    <div>
-                      <button
-                        onClick={() => setPowerTeamOpen(!powerTeamOpen)}
-                        className='w-full text-left py-2 px-3 rounded flex items-center justify-between hover:bg-gray-800 transition'
-                      >
-                        <div className='flex items-center space-x-2'>
-                          <FaMoneyBillWave />
-                          <span>Income</span>
-                        </div>
-                        {powerTeamOpen ? <FiChevronUp /> : <FiChevronDown />}
-                      </button>
-                      {powerTeamOpen && (
-                        <div className='ml-4 space-y-2 mt-2'>
-                          <button
-                            onClick={() => handleMenuClick("Incomes")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Incomes" ? "bg-gray-800" : ""
-                            }`}
-                          >
-                            <span>Incomes</span>
-                          </button>
-                          <button
-                            onClick={() => handleMenuClick("Transactions")}
-                            className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                              activeComponent === "Transactions"
-                                ? "bg-gray-800"
-                                : ""
-                            }`}
-                          >
-                            <span>Transactions</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        id="sidebar"
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-gray-300 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative lg:inset-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-label="Sidebar"
+      >
+        <div className="flex items-center justify-between px-4 py-5 border-b border-gray-700 min-h-[64px]">
+          <span className="text-lg font-semibold text-white">WIZ Dashboard</span>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden text-gray-400 hover:text-white"
+            aria-label="Close sidebar"
+          >
+            <FiX size={24} />
+          </button>
+        </div>
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
+          <SidebarButton
+            icon={FaHome}
+            label="Home"
+            onClick={() => handleMenuClick("Home")}
+            isActive={activeComponent === "Home"}
+          />
+          <SidebarButton
+            icon={FaUserShield}
+            label="Profile"
+            onClick={() => handleMenuClick("Profile")}
+            isActive={activeComponent === "Profile"}
+          />
+          {userRole === "USER" && (
+            <>
+              <SidebarButton
+                icon={FaUserPlus}
+                label="Refer Now"
+                onClick={() => handleMenuClick("Refer Now")}
+                isActive={activeComponent === "Refer Now"}
+              />
+              <SidebarButton
+                icon={FaUserFriends}
+                label="Team"
+                hasSubmenu={true}
+                isOpen={openMenus.team}
+                onClick={() => toggleMenu("team")}
+              />
+              <AnimatePresence>
+                {openMenus.team && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden ml-4 pl-4 border-l border-gray-700 space-y-1"
+                  >
+                    <SidebarSubButton
+                      label="Direct Referrals"
+                      onClick={() => handleMenuClick("Direct Referrals")}
+                      isActive={activeComponent === "Direct Referrals"}
+                    />
+                    <SidebarSubButton
+                      label="Level Wise"
+                      onClick={() => handleMenuClick("Level Wise")}
+                      isActive={activeComponent === "Level Wise"}
+                    />
+                    <SidebarSubButton
+                      label="Total Team"
+                      onClick={() => handleMenuClick("Total Team")}
+                      isActive={activeComponent === "Total Team"}
+                    />
+                    <SidebarSubButton
+                      label="Tree View"
+                      onClick={() => handleMenuClick("Tree View")}
+                      isActive={activeComponent === "Tree View"}
+                    />
+                  </motion.div>
                 )}
-
-                {/* Admin-specific Menu Items */}
-                {userRole === "ADMIN" && (
-                  <>
-                    <button
-                      onClick={() => handleMenuClick("Manage Users")}
-                      className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                        activeComponent === "Manage Users" ? "bg-gray-800" : ""
-                      }`}
-                    >
-                      <FaUsers />
-                      <span>Manage Users</span>
-                    </button>
-                    <button
-                      onClick={() => handleMenuClick("Total Business")}
-                      className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                        activeComponent === "Total Business"
-                          ? "bg-gray-800"
-                          : ""
-                      }`}
-                    >
-                      <FaChartLine />
-                      <span>Business Overview</span>
-                    </button>
-                    <button
-                      onClick={() => handleMenuClick("Transactions")}
-                      className={`w-full text-left py-2 px-3 rounded flex items-center space-x-2 hover:bg-gray-800 transition ${
-                        activeComponent === "Transactions" ? "bg-gray-800" : ""
-                      }`}
-                    >
-                      <FaHistory />
-                      <span>All Transactions</span>
-                    </button>
-                  </>
-                )}
-              </nav>
-            </motion.aside>
+              </AnimatePresence>
+            </>
           )}
-        </AnimatePresence>
-
-        {/* Main Content */}
-        <main className='flex-1 bg-gray-100 overflow-auto'>
-          <div className='p-6 border-b border-gray-300 bg-white shadow flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mt-16 md:mt-0'>
-            <div>
-              <h2 className='text-2xl font-semibold text-gray-800'>
-                Dashboard
-              </h2>
-              <p className='text-gray-500'>Welcome back, {userEmail}!</p>
-              <p className='text-gray-500'>Your role: {userRole}</p>
+          {userRole === "ADMIN" && (
+            <>
+              <SidebarButton
+                icon={FaUsers}
+                label="Manage Users"
+                onClick={() => handleMenuClick("Manage Users")}
+                isActive={activeComponent === "Manage Users"}
+              />
+              <SidebarButton
+                icon={FaChartLine}
+                label="Business Overview"
+                onClick={() => handleMenuClick("Total Business")}
+                isActive={activeComponent === "Total Business"}
+              />
+              <SidebarButton
+                icon={FaHistory}
+                label="All Transactions"
+                onClick={() => handleMenuClick("Transactions")}
+                isActive={activeComponent === "Transactions"}
+              />
+            </>
+          )}
+        </nav>
+      </aside>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-20">
+          <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div className="flex items-center flex-shrink-0">
+              <button
+                id="sidebar-toggle"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden mr-3 text-gray-600 hover:text-gray-900 p-1"
+                aria-label="Open sidebar"
+              >
+                <FiMenu size={24} />
+              </button>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                {activeComponent}
+              </h1>
             </div>
-            <button
-              onClick={handleSignOut}
-              className='bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition w-full md:w-auto'
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center justify-end flex-wrap gap-x-4 gap-y-1 flex-shrink-0">
+              <span className="text-sm text-gray-600 hidden sm:inline text-right">
+                {userEmail} ({userRole})
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 text-white py-1.5 px-3 sm:px-4 rounded-md hover:bg-red-700 transition duration-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex-shrink-0"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
-          <div className='p-4 md:p-6'>{renderContent()}</div>
+        </header>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {renderContent()}
         </main>
       </div>
-
-      {/* Toast Message */}
-      {showToast && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          className='fixed bottom-4 right-4 bg-gray-800 text-white py-2 px-4 rounded shadow z-50'
-        >
-          {toastMessage}
-        </motion.div>
-      )}
-
-      {/* Mobile Overlay */}
-      {isSidebarOpen && window.innerWidth < 768 && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 z-30' />
-      )}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed bottom-5 right-5 bg-gray-900 text-white py-2.5 px-5 rounded-lg shadow-lg z-50 text-sm"
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
