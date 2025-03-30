@@ -1,7 +1,13 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -18,7 +24,7 @@ import "react-toastify/dist/ReactToastify.css";
 const Layout = ({ children }) => (
   <>
     <Navbar />
-    <main className="pt-16">{children}</main>
+    <main className='pt-16'>{children}</main>
     <Footer />
   </>
 );
@@ -31,11 +37,11 @@ function App() {
   return (
     <Router>
       <ToastContainer />
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      <div className='min-h-screen bg-gradient-to-b from-white to-gray-50'>
         <Routes>
-          {/* Wrap all routes except Dashboard with Layout */}
+          {/* Public routes with Layout */}
           <Route
-            path="/"
+            path='/'
             element={
               <Layout>
                 <Home />
@@ -43,7 +49,7 @@ function App() {
             }
           />
           <Route
-            path="/about"
+            path='/about'
             element={
               <Layout>
                 <About />
@@ -51,7 +57,7 @@ function App() {
             }
           />
           <Route
-            path="/services"
+            path='/services'
             element={
               <Layout>
                 <Services />
@@ -59,7 +65,7 @@ function App() {
             }
           />
           <Route
-            path="/contact"
+            path='/contact'
             element={
               <Layout>
                 <Contact />
@@ -67,7 +73,7 @@ function App() {
             }
           />
           <Route
-            path="/signin"
+            path='/signin'
             element={
               <Layout>
                 <SignIn setIsAuthenticated={setIsAuthenticated} />
@@ -75,24 +81,26 @@ function App() {
             }
           />
           <Route
-            path="/signup"
+            path='/signup'
             element={
               <Layout>
                 <SignUp setIsAuthenticated={setIsAuthenticated} />
               </Layout>
             }
           />
-          {/* Dashboard Route without Navbar and Footer */}
+
+          {/* Protected Dashboard Route without Layout */}
           <Route
-            path="/dashboard"
+            path='/dashboard'
             element={
-              isAuthenticated ? (
+              <ProtectedRoute>
                 <Dashboard setIsAuthenticated={setIsAuthenticated} />
-              ) : (
-                <Navigate to="/signin" />
-              )
+              </ProtectedRoute>
             }
           />
+
+          {/* Optional: Redirect any other path to home or a 404 page */}
+          {/* <Route path="*" element={<Navigate to="/" />} /> */}
         </Routes>
       </div>
     </Router>
