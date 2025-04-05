@@ -16,9 +16,9 @@ const config = {
   heroHeadline: "IT'S TIME TO BUILD YOUR ECONOMY",
   heroSubtext:
     "Make your work easier with an integrated ecosystem that lets all departments collaborate seamlessly and smartly.",
-  aboutHeadline: "About WIZ InfraProjects",
+  aboutHeadline: "About WIZ InfraTrades",
   aboutText:
-    "WIZ InfraProjects is a multi-sector powerhouse delivering excellence in construction, finance, technology, and beyond. We champion innovation and sustainable development to empower communities and drive economic evolution.",
+    "WIZ InfraTrades is a multi-sector powerhouse delivering excellence in construction, finance, technology, and beyond. We champion innovation and sustainable development to empower communities and drive economic evolution.",
   heroImageAlt: "Collaborative ecosystem illustration",
   getStartedButtonText: "Get Started",
   // Placeholder data for new sections - VERIFY ICONS MATCH IMPORTS
@@ -35,7 +35,7 @@ const config = {
      { icon: FiBriefcase, title: "Integrated Approach", description: "Seamless collaboration across departments for holistic solutions." }, // Reused FiBriefcase here, ensure it's intended or change icon
   ],
   ctaHeadline: "Ready to Elevate Your Project?",
-  ctaText: "Let WIZ InfraProjects be your partner in building a successful future. Contact us today to discuss your needs.",
+  ctaText: "Let WIZ InfraTrades be your partner in building a successful future. Contact us today to discuss your needs.",
   ctaButtonText: "Contact Us",
   // Animation config
   animation: {
@@ -277,7 +277,7 @@ function HomePage() {
         >
             <div className="container mx-auto px-6">
                 <h2 id="benefits-headline" className="text-3xl md:text-4xl font-bold text-center text-white mb-16 tracking-tight">
-                    Why Partner with WIZ InfraProjects?
+                    Why Partner with WIZ InfraTrades?
                 </h2>
                  {/* Grid container doesn't need variants if parent handles stagger */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12">
