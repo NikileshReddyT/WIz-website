@@ -199,6 +199,15 @@ function SignIn({ setIsAuthenticated }) {
           >
             {isSubmitting ? "Submitting..." : "Sign In"}
           </motion.button>
+          <div className="text-center mt-4">
+            <span className="text-gray-400">Don't have an account? </span>
+            <a
+              href="/signup"
+              className="text-yellow-500 hover:underline"
+            >
+              Sign Up
+            </a>
+          </div>
         </motion.form>
       </div>
       <ToastContainer

@@ -313,6 +313,17 @@ function SignUp({ setIsAuthenticated }) {
               {isSubmitting ? "Submitting..." : "Sign Up"}
             </motion.button>
           </motion.form>
+
+          {/* Link to Sign In Page */}
+          <div className="text-center mt-4">
+            <span className="text-gray-400">Already have an account? </span>
+            <a
+              href="/signin"
+              className="text-yellow-500 hover:underline"
+            >
+              Sign In
+            </a>
+          </div>
         </div>
       </div>
     </>
